@@ -1,18 +1,20 @@
 import java.awt.Color;
-import javax.swing.JButton;
+import javax.swing.JLabel;
 import java.awt.event.*;
 
-public class HomeButton extends JButton
+public class HomeButton extends JLabel
 {
+	private int home_btn_size = 36;
+	private String image_path = "home_image.png";
+	
 	public HomeButton(){
-		super("HOME");
-		addActionListener( new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				GUI_Manager.loadPage( GUI.HOME_ID );
+		setIcon(Resource_Manager.loadImageLocal(image_path));
+		addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				GUI_Manager.loadPage(GUI.HOME_ID);
 			}
-		} );
-		setSize( GUI.HOMEBUTTON_SIZE, GUI.HOMEBUTTON_SIZE );
-		setLocation( GUI.SCREEN_WIDTH - (GUI.HOMEBUTTON_SIZE*2 + GUI.BUFFER_SIZE), GUI.BUFFER_SIZE );
-		setForeground( Color.white );
+		});
+		setSize( home_btn_size, home_btn_size );
+		setLocation( GUI.SCREEN_WIDTH - (home_btn_size*2 + GUI.BUFFER_SIZE), GUI.BUFFER_SIZE );
 	}
 }

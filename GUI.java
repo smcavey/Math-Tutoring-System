@@ -1,5 +1,4 @@
 import javax.swing.*;
-//import javax.swing.JLabel;
 import java.awt.FlowLayout;
 import java.awt.Color;
 
@@ -9,11 +8,11 @@ public class GUI
 	
 	public static int SCREEN_WIDTH = 1280;
 	public static int SCREEN_HEIGHT = 720;
-	public static int TEST_BUTTON_WIDTH = 150;
-    public static int TEST_BUTTON_HEIGHT = 50;
-	public static int NAVBUTTON_WIDTH = 80;
-	public static int NAVBUTTON_HEIGHT = 20;
-	public static int HOMEBUTTON_SIZE = 35;
+	public static int TEST_BUTTON_WIDTH = 750;
+    public static int TEST_BUTTON_HEIGHT = 35;
+	public static int NAVBUTTON_WIDTH = 150;
+	public static int NAVBUTTON_HEIGHT = 30;
+
 	public static int TITLE_LABEL_WIDTH = 250;
 	public static int TITLE_LABEL_HEIGHT = 30;
 	public static int BUFFER_SIZE = 5;
@@ -32,6 +31,19 @@ public class GUI
 	public static String HOME_ID = "HOME";
 	public static String GRID_ID = "GRID";
 	public static String RESULTS_ID = "RESULTS";
+	public static String PROGRESS_ID = "PROGRESS";
+	public static String LOGIN_ID = "LOGIN";
+	public static String CREATE_ID = "CREATE";
+	public static String REWARD_ID = "REWARD";
+	
+	public static String TUTORIAL = "t";
+	public static String PRAC_TEST = "p";
+	public static String UNIT_TEST = "u";
+	public static String GRADE_K = "K";
+	public static String GRADE_1 = "1";
+	public static String GRADE_2 = "2";
+	public static String GRADE_3 = "3";
+	public static String GRADE_4 = "4";
 	
 	public static boolean DEBUG;
 	
@@ -41,8 +53,21 @@ public class GUI
 		
 		CreateMainWindow();
 		GUI_Manager.Init();
+		Resource_Manager.Init();
+		AccountHelper.init();
+		RewardLayout.init();
+		GUI_Manager.loadPage(LOGIN_ID); // starting page
 		
-		GUI_Manager.loadPage(HOME_ID); // starting page
+		//root.getRootPane().setBorder(BorderFactory.createMatteBorder(4, 4, 4, 4, Color.RED));
+		//Populate User Profile with scores
+		UserProfile.scores.put("a4t", 80);
+		UserProfile.scores.put("a2t", 90);
+		UserProfile.scores.put("n4t", 75);
+		UserProfile.scores.put("n3t", 89);
+		UserProfile.scores.put("c4t", 78);
+		UserProfile.scores.put("c3t", 94);
+		UserProfile.scores.put("g3t", 56);
+		UserProfile.scores.put("g4t", 76);
 	}
 	
 	static void CreateMainWindow()
@@ -55,6 +80,8 @@ public class GUI
 
 		root.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		root.getContentPane().setBackground(Color.black);
+		
+		root.setVisible(true);
 	}
 	
 	public static void addComponent(JComponent comp) { 
@@ -65,7 +92,7 @@ public class GUI
 		if(DEBUG)System.out.printf("Root dnt: %d\n", count);
 		root.getContentPane().remove(comp);
 		if(root.getContentPane().getComponentCount() == count) {
-			System.out.println("Error removing component...");
+			System.out.println("Error removing component...\n");
 		}
 	}
 	public static void clearRootFrame() { 
@@ -76,6 +103,5 @@ public class GUI
 		System.out.printf("Refreshing page\n");
 		root.revalidate();
 		root.repaint();
-		root.setVisible(true);
 	}
 }
