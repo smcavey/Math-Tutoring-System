@@ -1,11 +1,14 @@
+//Reward contains reward descriptions, the earned boolean status, image path, and a full description
 import java.util.HashMap;
 import javax.swing.ImageIcon;
+
 public class Reward
 {
 	public boolean earned = false;
 	public String rewardDesc;
-	public String imagePath;
+	private String imagePath;
 	public String rewardDescFull;
+	
 	public Reward(String rewardDesc, String imagePath, boolean earned, String rewardDescFull)
 	{
 		this.rewardDesc = rewardDesc;
@@ -15,7 +18,13 @@ public class Reward
 	}
 	public ImageIcon getImage()
 	{
-		return Resource_Manager.loadImageLocal(imagePath);
+		return Resource_Manager.loadResource(getImagePath());
 	}
-	
+	public String getImagePath()
+	{
+		return (earned) ? imagePath : imagePath + "_d";
+	}
+	public String getAbsolutePath(){
+		return imagePath;
+	}
 }

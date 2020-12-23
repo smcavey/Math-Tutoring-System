@@ -1,7 +1,9 @@
+//ProgressLayout contains sub class ResultInfo which fetches quiz results to be displayed
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.Stack;
 import java.util.*;
 import java.util.Map.Entry;
 import javax.swing.border.LineBorder;
@@ -23,6 +25,8 @@ public class ProgressLayout extends GUI_Page
 	private JPanel resultsContainer;
 	private GridLayout gridLayout;
 	
+	private int maxProgress = 20;
+	
 	public ProgressLayout()
 	{
 
@@ -36,14 +40,14 @@ public class ProgressLayout extends GUI_Page
 		title.setSize( titleWidth, tileHeight );
 		title.setLocation( (GUI.SCREEN_WIDTH/2) - (titleWidth/2), GUI.BUFFER_SIZE_LG );
 		title.setForeground( Color.white );
-		title.setBorder( new LineBorder(Color.LIGHT_GRAY, 2) ); //for debug
+		//title.setBorder( new LineBorder(Color.LIGHT_GRAY, 2) ); //for debug
 		GUI.addComponent(title);
 		
 		//home button
 		GUI.addComponent( new HomeButton() );
 		
 		
-		String [] grades = new String[]{"4", "3", "2", "1", "k"};
+		String [] grades = new String[]{"K", "1", "2", "3", "4"};
 		JPanel filterPanel = new JPanel();
 		filterPanel.setBackground(Color.black);
 		filterPanel.setLayout(new java.awt.GridLayout(grades.length,1,10,10));
@@ -59,14 +63,24 @@ public class ProgressLayout extends GUI_Page
 		progressBars.setLocation(GUI.SCREEN_WIDTH/6,tileHeight + GUI.BUFFER_SIZE_LG*2);
 		//progressBars.setBorder( new LineBorder(Color.blue, 2));
 		GUI.addComponent(progressBars);
-		for(int i = 0; i < 5; i++)
-		{
-			JLabel bar = new JLabel();
-			bar.setBackground( Color.white );
-			bar.setBorder(new LineBorder(Color.blue, 2));
-			progressBars.add(bar);
-		}
 		
+		int[] gradeProgress = UserProfile.getProgressByGrade();
+		
+/* 		for(int i = 0; i < grades.length; i++)
+		{
+			//JLabel bar = new JLabel();
+			//bar.setBackground( Color.white );
+			//bar.setBorder(new LineBorder(Color.blue, 2));
+			//progressBars.add(bar);
+			JProgressBar pBar = new JProgressBar( 0, maxProgress );
+			System.out.printf("G: %d  Prog: %d\n", i, gradeProgress[i]); 
+			pBar.setValue( gradeProgress[i] );
+			pBar.setBorderPainted( true );
+			pBar.setBackground( Color.black );
+			pBar.setForeground( Color.yellow );
+			progressBars.add( pBar );
+		}
+		 */
 		//grade filtering buttons		
 
 		for(int i = 0; i < grades.length; i++)
@@ -74,11 +88,11 @@ public class ProgressLayout extends GUI_Page
 			JLabel grade = new JLabel(grades[i], SwingConstants.CENTER);
 			//grade.setSize(GRADE_BUTTON_WIDTH, GRADE_BUTTON_HEIGHT);
 			//grade.setLocation(GRADE_BUTTON_X_ORIGIN, GRADE_BUTTON_Y_ORIGIN * (i+1) + (GUI.BUFFER_SIZE_LG*(i+1)));
-			//grade.setOpaque(true);
+			grade.setOpaque(true);
 			grade.setForeground( Color.white );
 			grade.setBackground( Color.black );
 			grade.setFont(new Font("Calibri", Font.PLAIN, 48));
-			grade.setBorder(new LineBorder(Color.blue, 2));
+			grade.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
 			
 			String temp = grades[i];
 			grade.addMouseListener(new MouseAdapter() {
@@ -91,10 +105,18 @@ public class ProgressLayout extends GUI_Page
 				}
 				public void mouseExited(MouseEvent evt) {
 					grade.setForeground( Color.white );
-					grade.setBorder(new LineBorder(Color.blue, 2));
+					grade.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
 				}
 			});
 			filterPanel.add( grade );
+			
+			JProgressBar pBar = new JProgressBar( 0, maxProgress );
+			System.out.printf("G: %d  Prog: %d\n", i, gradeProgress[i]); 
+			pBar.setValue( gradeProgress[i] );
+			pBar.setBorderPainted( true );
+			pBar.setBackground( Color.black );
+			pBar.setForeground( Color.yellow );
+			progressBars.add( pBar );
 		}
 
 		
@@ -103,6 +125,7 @@ public class ProgressLayout extends GUI_Page
 		resultsContainer.setBorder( new LineBorder(Color.PINK, 2) );
 		resultsContainer.setLocation(GUI.SCREEN_WIDTH/2 - GUI.BUFFER_SIZE_LG*3 - GUI.BUFFER_SIZE*2, tileHeight + GUI.BUFFER_SIZE_LG*2 );
 		resultsContainer.setSize(GUI.SCREEN_WIDTH/2 + GUI.BUFFER_SIZE_LG*2, GUI.SCREEN_HEIGHT - (GUI.SCREEN_HEIGHT/4));
+		resultsContainer.setLayout(new BoxLayout( resultsContainer, BoxLayout.Y_AXIS));
 		GUI.addComponent(resultsContainer);
 	}
 	
@@ -111,52 +134,72 @@ public class ProgressLayout extends GUI_Page
 		if(resultsContainer.getComponentCount() > 0) {
 			resultsContainer.removeAll();
 		}
-		
+
 		System.out.printf("Loading Grade %s stats...\nNum Scores: %d\n", grade, UserProfile.scores.size());
 		ArrayList <ResultInfo> results = new ArrayList<ResultInfo>();
+		for (Entry<String, Integer> entry : UserProfile.scores.entrySet())
+		{
+			Module tempModule = Resource_Manager.modules.get(entry.getKey());
+
+			if(tempModule.getGrade().equals( grade ))
+			{
+				JLabel info = new JLabel(tempModule.topic + " - " + tempModule.subTopic + ", Score: " + entry.getValue());
+				info.setFont(new Font("Dialog", Font.PLAIN, 32));
+				info.setBackground( Color.black );
+				info.setForeground( Color.white );
+				resultsContainer.add( info );
+			}
+		}
 		
 		//gridLayout = new GridLayout(results.size(), 1);
 		//gridLayout.setVgap( GUI.BUFFER_SIZE );
-		resultsContainer.setLayout(new BoxLayout( resultsContainer, BoxLayout.Y_AXIS));
 		
-		for (Entry<String, Integer> entry : UserProfile.scores.entrySet())
-		{
-			System.out.println(entry.getKey());
-			String grd = entry.getKey().substring(1,2); //Grade
-			//String typ = entry.getKey().substring(2,3);
-			String top = entry.getKey().substring(0,1);	//Topic
-			System.out.printf("Grade: %s  Topic: %s\n", grd, top);
-			int scr = entry.getValue();
-			if(grd.equals( grade ))
-			{
-				results.add(new ResultInfo(top, scr));
-			}
-		}
-
-		for(int i = 0; i < results.size(); i++)
+		
+		/* for(int i = 0; i < results.size(); i++)
 		{
 			ResultInfo r = results.get(i);
-			JLabel info = new JLabel("Topic: " + r.topic + " Score: " + r.score);
+			String contentTopic = r.topic;
+			switch(contentTopic)
+			{
+				case "g":
+					contentTopic = "Geometry";
+					break;
+				case "c":
+					contentTopic = "Counting";
+					break;
+				case "a":
+					contentTopic = "Algebra";
+					break;
+				case "o":
+					contentTopic = "Operations";
+					break;
+				default:
+					contentTopic = "no match";
+			}
+			JLabel info = new JLabel("Topic: " + contentTopic + ", Sub-topic: " + r.subTopic + ", Score: " + r.score);
 			info.setSize(INFO_LABEL_WIDTH, INFO_LABEL_HEIGHT);
-			info.setLocation(INFO_LABEL_X_ORIGIN, INFO_LABEL_Y_ORIGIN + (i * INFO_LABEL_HEIGHT));
-			info.setFont(new Font("Serif", Font.PLAIN, 36));
+			info.setLocation(INFO_LABEL_X_ORIGIN, INFO_LABEL_Y_ORIGIN + (i * INFO_LABEL_HEIGHT)); 
+			info.setFont(new Font("Serif", Font.PLAIN, 32));
 			//info.setOpaque(true);
 			info.setBackground( Color.black );
 			info.setForeground( Color.white );
 			resultsContainer.add( info );
-		}
+		}*/
 
 		resultsContainer.revalidate();
+		resultsContainer.repaint();
 	}
 }
 
 class ResultInfo
 {
 	public String topic;
+	public String subTopic;
 	public int score;
-	public ResultInfo(String topic, int score)
+	public ResultInfo(String topic, String subTopic, int score)
 	{
 		this.topic = topic;
+		this.subTopic = subTopic;
 		this.score = score;
 	}
 }

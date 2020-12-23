@@ -1,3 +1,5 @@
+//GUI_Manager contains the function loadPage()
+//GUI_Manager initializes all pages and puts the page ID into the guiPages hashmap
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
@@ -45,6 +47,7 @@ public class GUI_Manager
 		
 		RewardLayout reward_page = new RewardLayout();
 		guiPages.put(GUI.REWARD_ID, reward_page);
+
 		
 		//Module geo_4_tutorial = new Module("g4t", "Angle Tutorial", 6);//, ModuleType.TUTORIAL, Subject.GEOMETRY, 4);
 		//Geometry, Grade 4, Tutorial
@@ -87,13 +90,6 @@ public class GUI_Manager
 		TestLayout g4p6 = new TestLayout("g4p6", "Geometry Practice Problem 6", "g4p5", "done");
 		guiPages.put("g4p6", g4p6);*/
 		
-	}
-	private static void loadModule(String pageKey, String pageTitle, int numPages)
-	{
-		for(int i = 1; i < numPages; i++){
-			
-			
-		}
 	}
 
 	public static void loadPage(String pageIndex)

@@ -1,3 +1,6 @@
+//ModuleGridLayout contains the filter functions for sorting modules displayed
+//ModuleGridLayout has wrapper class Cell which contains the Module, title, and image
+//getBackgroundColor() uses rgb coloring to color code the modules
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -5,6 +8,7 @@ import java.awt.GridLayout;
 import javax.swing.border.LineBorder;
 import java.util.*;
 import java.util.Map.Entry;
+import javax.swing.ImageIcon;
 
 public class ModuleGridLayout extends GUI_Page
 {
@@ -24,6 +28,11 @@ public class ModuleGridLayout extends GUI_Page
 	//Adds filterKey from applied filters
 	public static void addFilter(String filterKey) {
 		appliedFilters.add(filterKey);
+		if(GUI.DEBUG){
+			for(String str : appliedFilters){
+				System.out.println(str);
+			}
+		}
 		rePopulateGrid();
 	}
 	
@@ -47,13 +56,13 @@ public class ModuleGridLayout extends GUI_Page
 	public void activate()
 	{
 		System.out.println("Grid Layout activate");
+		appliedFilters.clear();
 		
 		//Home button
 		GUI.addComponent( new HomeButton() );
 		
 		//Starting X position of grid container and filter button groups
 		int xOffset = GUI.BUFFER_SIZE_LG * 2 + GUI.FILTER_BUTTON_WIDTH;	//+BUF+BTN+BUF+
-		
 		
 		//Filter Button Section Start
 		JPanel filterButtonContainer = new JPanel();
@@ -62,17 +71,34 @@ public class ModuleGridLayout extends GUI_Page
 		GridLayout gridLayout = new GridLayout(1,3);
 		gridLayout.setHgap( GUI.BUFFER_SIZE_LG );
 		
-		filterButtonContainer.setLayout(gridLayout);
+		filterButtonContainer.setLayout( gridLayout );
 		filterButtonContainer.setLocation( xOffset, GUI.BUFFER_SIZE_LG );
-		int filterContainerWidth = GUI.FILTER_BUTTON_WIDTH*3 + GUI.BUFFER_SIZE_LG*4;
-		filterButtonContainer.setSize( filterContainerWidth, GUI.FILTER_BUTTON_HEIGHT );
+		
+		int mainWidth = GUI.MODULE_GRID_CELL_WIDTH*6 + GUI.BUFFER_SIZE_LG*3; //6 cells w/ padding left/+right for each
+		
+		filterButtonContainer.setSize( mainWidth, GUI.FILTER_BUTTON_HEIGHT + GUI.BUFFER_SIZE*2);
 		
 		for(int i = 0; i < FILTER_BUTTONS.length; i++)
-		{			
+		{
+			JPanel container = new JPanel();
+			container.setBorder(new LineBorder(Color.LIGHT_GRAY, 1, true));
+			container.setOpaque(false);
 			FilterButton topicFilterButton = new FilterButton( FILTER_BUTTONS[i], filterKeys[i] );
-			filterButtonContainer.add(topicFilterButton);
+			//gridLayout = new GridLayout(1,2);
+			//container.setLayout( gridLayout );
+			//container.setLayout( new BoxLayout(container, BoxLayout.X_AXIS));
+			//container.add(Box.createRigidArea(new Dimension(GUI.BUFFER_SIZE_LG, 0)));
+			container.add(topicFilterButton);
+			
+			//container.add(Box.createHorizontalGlue());
+			//ImageIcon topicFilterButtonImage = new ImageIcon(MATTYPE_BUTTON_IMAGES[i]);
+			JLabel imageHolder = new JLabel(Resource_Manager.loadResourceScaled(Module.MATTYPE_BUTTON_IMAGES[i], GUI.FILTER_BUTTON_HEIGHT, GUI.FILTER_BUTTON_HEIGHT));
+			imageHolder.setBackground( Color.black );
+			imageHolder.setOpaque( true );
+			container.add(imageHolder);
+			filterButtonContainer.add( container );
 		}
-		GUI.addComponent(filterButtonContainer);
+		GUI.addComponent( filterButtonContainer );
 		//Filter Button Section End
 		
 		JPanel gradeFilterButtonContainer = new JPanel();
@@ -80,16 +106,18 @@ public class ModuleGridLayout extends GUI_Page
 		gridLayout = new GridLayout(5,1);
 		gridLayout.setVgap( GUI.BUFFER_SIZE_LG );
 		gradeFilterButtonContainer.setLayout( gridLayout );
-		gradeFilterButtonContainer.setLocation( GUI.BUFFER_SIZE_LG, yOffset);
+		gradeFilterButtonContainer.setLocation( GUI.BUFFER_SIZE_LG, yOffset );
 		gradeFilterButtonContainer.setSize( GUI.FILTER_BUTTON_WIDTH, GUI.FILTER_BUTTON_HEIGHT*5 + GUI.BUFFER_SIZE_LG*5 );
 		gradeFilterButtonContainer.setBackground( Color.black );
+		
 		//gridLayout.setHgap( GUI.BUFFER_SIZE_LG );
 		//Vert Filter Row Buttons
 		int offestStartIndex = 3;
 		for(int i = 0; i < 5; i++)
 		{
-			String buttonName = (i == 0) ? "K" : "Grade " + i;
+			String buttonName = (i == 0) ? GUI.GRADE_K : "Grade " + i;
 			FilterButton tutorialFilterBtn = new FilterButton( buttonName, filterKeys[i + offestStartIndex] );
+			tutorialFilterBtn.setBorder(new LineBorder(Color.LIGHT_GRAY, 1, true));
 			//tutorialFilterBtn.setSize( GUI.FILTER_BUTTON_WIDTH, GUI.FILTER_BUTTON_HEIGHT );
 			//tutorialFilterBtn.setLocation( GUI.BUFFER_SIZE_LG, (GUI.FILTER_BUTTON_HEIGHT + GUI.BUFFER_SIZE_LG)*i + yOffset );
 			//GUI.addComponent( tutorialFilterBtn );
@@ -98,10 +126,9 @@ public class ModuleGridLayout extends GUI_Page
 		
 		GUI.addComponent( gradeFilterButtonContainer );
 		
-		
 		gridContainer = new JPanel();
-		gridContainer.setSize( filterContainerWidth, GUI.SCREEN_HEIGHT - (GUI.FILTER_BUTTON_HEIGHT + GUI.BUFFER_SIZE_LG) * 3 );
-		gridContainer.setLocation( xOffset, GUI.BUFFER_SIZE_LG*2+GUI.FILTER_BUTTON_HEIGHT );
+		gridContainer.setSize( mainWidth, GUI.SCREEN_HEIGHT - (GUI.FILTER_BUTTON_HEIGHT + GUI.BUFFER_SIZE_LG) * 3 );
+		gridContainer.setLocation( xOffset, GUI.BUFFER_SIZE_LG*2 + GUI.FILTER_BUTTON_HEIGHT );
 		gridContainer.setBackground( Color.black );
 		gridContainer.setBorder( new LineBorder(Color.LIGHT_GRAY, 2) );
 		GUI.addComponent( gridContainer );
@@ -120,23 +147,9 @@ public class ModuleGridLayout extends GUI_Page
 			System.out.print("Populating Grid ");
 
 			for(String key : appliedFilters){
-				System.out.print(key);
+				System.out.println(key);
 			}
-			System.out.println();
 		}
-		
-		//Set<String> keys = Resource_Manager.modules.keySet();	//Set<String> of Hashmap keys
-		
-		//if(GUI.DEBUG)System.out.printf("Keys: Initial cnt - %d\n", keys.size());
-
-		/*HashSet<String> hashSet = new HashSet<String>();  	//temp hashset
-		for(String k : keys){
-			
-			if(k == GUI.HOME_ID || k == GUI.GRID_ID || k == GUI.RESULTS_ID || k == GUI.PROGRESS_ID || k == GUI.LOGIN_ID)
-				continue;
-				
-			hashSet.add(k.substring(0,3));					//removes trailing char from key
-		}*/
 		
 		ArrayList<Module> tempArrayList = new ArrayList<Module>();	//Stores valid pageKeys
 		//foreach Module in Resource_Manager.modules
@@ -152,7 +165,7 @@ public class ModuleGridLayout extends GUI_Page
 		//loop through temp list and populate grid
 		
 		int cnt = 0;
-		int pad = 5;					//padding between grid cells
+		int pad = GUI.BUFFER_SIZE;					//padding between grid cells
 		int lim = tempArrayList.size();	
 	
 		gridContainer.setLayout(new GridBagLayout());
@@ -190,29 +203,67 @@ public class ModuleGridLayout extends GUI_Page
 
 class Cell extends JPanel {
 
-	private static int START_PAGE = 1;
-	
 	private Color defaultBgColor;
 	private Color defaultFgColor;
 
 	private String pageKey;
 	
 	private int dimensionX, dimensionY;	//prefered dimensions
+	//private String[] MATTYPE_BUTTON_IMAGES = { "tutorial_small.png", "practice_small.png", "test_small.png" };
 	
 	public Cell(Module module, int dimensionX, int dimensionY) {
 		this.pageKey = module.pageKey;
-		add(new JLabel(module.topic));
-		add(new JLabel(module.subTopic));
+		//this.setAlignmentX( Component.CENTER_ALIGNMENT );
+		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+		JLabel topicLabel = new JLabel(module.topic);
+		topicLabel.setAlignmentX( Component.CENTER_ALIGNMENT );
+		
+		Color col = new Color(255,255,255);
+		topicLabel.setFont( new Font("Dialog", Font.BOLD, 14) );
+		if(GUI.DEBUG) topicLabel.setBorder( new LineBorder(Color.red, 1) );
+		topicLabel.setForeground(col);
+		add(topicLabel);
+		JLabel subTopicLabel = new JLabel(module.subTopic);
+		subTopicLabel.setForeground(col);
+		if(GUI.DEBUG) subTopicLabel.setBorder( new LineBorder(Color.red, 1) );
+		add(subTopicLabel);
+		subTopicLabel.setAlignmentX( Component.CENTER_ALIGNMENT );
 		this.dimensionX = dimensionX;
 		this.dimensionY = dimensionY;
-		setBackground(getBackgroundColor(module.topic));
+		setBackground(getBackgroundColor(module.topic, module.getGrade()));
 		defaultBgColor = getBackground();
 		defaultFgColor = getForeground();
+		
+		
+		int index = 1;
+		//String imagePath = Module.MATTYPE_BUTTON_IMAGES[0];
+		//ModuleCatagory modCat = module.moduleCatagory;
+		String type = module.getType();
+		System.out.print(type);
+		if(GUI.TUTORIAL.equals(type))
+		{
+			index = 0;
+		}
+		else if(GUI.UNIT_TEST.equals(type))
+		{
+			index = 2;
+		}
+		String imagePath = Module.MATTYPE_BUTTON_IMAGES[index];
+		//ImageIcon moduleImage = new ImageIcon(imagePath);
+		JLabel modCatImage = new JLabel(Resource_Manager.loadResource(imagePath));//, GUI.MODULE_GRID_CELL_WIDTH, GUI.MODULE_GRID_CELL_WIDTH));
+		modCatImage.setAlignmentX( Component.CENTER_ALIGNMENT );
+		if(GUI.DEBUG) modCatImage.setBorder( new LineBorder(Color.red, 1) );
+		add(modCatImage);
 		
 		addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				Module.setActiveModule(pageKey);
-				GUI_Manager.loadPage(Module.getActiveModule().getCurrentPageKey());
+				GUI_Manager.loadPage(Module.getActiveModule().getFirstPage());
+/* 				ModuleType moduleType = Module.getActiveModule().moduleType;
+				if(moduleType == ModuleType.TUTORIAL || moduleType == ModuleType.PRAC_TEST_MULTI){
+					pageKey = pageKey + "1";
+				} 
+				GUI_Manager.loadPage(pageKey);//Module.getActiveModule().getCurrentPageKey()); */
 			}
 		});
 		addMouseListener(new MouseAdapter() {
@@ -232,56 +283,171 @@ class Cell extends JPanel {
 		return new Dimension(dimensionX, dimensionY);
 	}
 	
-	private static Color getBackgroundColor(String topic)
+	private static Color getBackgroundColor(String topic, String grade)
 	{
-		if(topic.equals("Geometry"))
-		{
-			return Color.blue;
-		}
-		else if(topic.equals("Algebra"))
-		{
-			return Color.red;
-		}
-		else
-		{
-			return Color.cyan;
-		}
-	}
-}
+		//System.out.println("topic: " + topic + " grade: " + grade);
+		//Module.getGrade()
+		// return Color.decode("#FFFFFF"); to use hex
 
+
+		//String[] grades = new String { new Color(0,0,255), new Color(255,0,255), new Color(0,255,0), new Color(255,0,0), new Color(255,255,0) }
+		String[] subjects = new String[] { "Geometry", "Algebra", "Counting", "Operations" };
+		int modifier = 0;
+		int mod = 35;
+		Color col = Resource_Manager.colorTable.get(grade);
+		//System.out.println(topic);
+		for(String str : subjects){
+			if(str.equals(topic)){
+				int r = col.getRed();
+				int g = col.getGreen();
+				int b = col.getBlue();
+				r = (r > 0) ? r - modifier : 0;
+				g = (g > 0) ? g - modifier : 0;
+				b = (b > 0) ? b - modifier : 0;
+				Color newCol = new Color( r, g, b );
+				//System.out.println(newCol.toString());
+				return newCol;
+			}
+			else{
+				modifier += mod;
+			}
+		}
+		//System.out.println(col.toString());
+		
+		return Color.black;
+		/* if(topic.equals("Geometry"))
+		{
+			if(grade.equals("k"))
+			{
+				return Color.decode("#00DCFF");
+			}
+			if(grade.equals("1"))
+			{
+				return Color.decode("#2E00FF");
+			}
+			if(grade.equals("2"))
+			{
+				return Color.decode("#23FF00");
+			}
+			if(grade.equals("3"))
+			{
+				return Color.decode("#FF0000");
+			}
+			if(grade.equals("4"))
+			{
+				return Color.decode("#DCFF00");
+			}
+		}
+		if(topic.equals("Algebra"))
+		{
+			if(grade.equals("k"))
+			{
+				return Color.decode("#00B1CD");
+			}
+			if(grade.equals("1"))
+			{
+				return Color.decode("#1F00AB");
+			}
+			if(grade.equals("2"))
+			{
+				return Color.decode("#1ABC00");
+			}
+			if(grade.equals("3"))
+			{
+				return Color.decode("#B00000");
+			}
+			if(grade.equals("4"))
+			{
+				return Color.decode("#BDDB00");
+			}
+		}
+		if(topic.equals("Counting"))
+		{
+			if(grade.equals("k"))
+			{
+				return Color.decode("#0094AC");
+			}
+			if(grade.equals("1"))
+			{
+				return Color.decode("#180083");
+			}
+			if(grade.equals("2"))
+			{
+				return Color.decode("#128100");
+			}
+			if(grade.equals("3"))
+			{
+				return Color.decode("#5F0000");
+			}
+			if(grade.equals("4"))
+			{
+				return Color.decode("#8FA500");
+			}
+		}
+		if(topic.equals("Operations"))
+		{
+			if(grade.equals("k"))
+			{
+				return Color.decode("#005A68");
+			}
+			if(grade.equals("1"))
+			{
+				return Color.decode("#0B003E");
+			}
+			if(grade.equals("2"))
+			{
+				return Color.decode("#083800");
+			}
+			if(grade.equals("3"))
+			{
+				return Color.decode("#240000");
+			}
+			if(grade.equals("4"))
+			{
+				return Color.decode("#4E5A00");
+			}
+		}
+		return Color.black;
+		*/
+	} 
+}
 
 class FilterButton extends JLabel
 {
 	private String filterKey;
 	private boolean isPressed = false;
-	private Color defaultColor = Color.black;
-	private Color selectedColor = Color.LIGHT_GRAY;
+	private static Color defaultBgColor = Color.black;
+	private static Color selectedBgColor = Color.darkGray;
+	private static Color defaultTextColor = Color.white;
+	private static Color selectTextColor = Color.lightGray;
 	
 	public FilterButton(String buttonName, String filterKey){
 		super(buttonName, SwingConstants.CENTER);
 		this.filterKey = filterKey;
-		setVerticalTextPosition(JLabel.CENTER);
-		setVerticalAlignment(JLabel.CENTER);
-		setBackground(Color.white);
-		setForeground(Color.black);
+		//setVerticalTextPosition(JLabel.CENTER);
+		//setVerticalAlignment(JLabel.CENTER);
 		setOpaque(true);
-		setBorder(new LineBorder(Color.LIGHT_GRAY, 2, true));
-		setFont(new Font("Calibri", Font.PLAIN, 24));
-		defaultColor = getBackground();
+		setBackground(defaultBgColor);
+		setForeground(defaultTextColor);
+		
+		//setBorder(new LineBorder(Color.LIGHT_GRAY, 1, true));
+		setFont(new Font("Dialog", Font.PLAIN, 24));
+		//defaultBgColor = getBackground();
 		
 		addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
-				if(isPressed){
-					setBackground(defaultColor);
-					setForeground(Color.black);
-					ModuleGridLayout.removeFilter(filterKey);
-				}
-				else{
-					setBackground(selectedColor);
-					setForeground(Color.DARK_GRAY);
+				isPressed = !isPressed;
+				if(isPressed){ //Selected
+					System.out.println(buttonName);
+					setBackground(selectedBgColor);
+					setForeground(selectTextColor);
 					ModuleGridLayout.addFilter(filterKey);
 				}
-				isPressed = !isPressed;
+				else{ //deselected
+					setBackground(defaultBgColor);
+					setForeground(defaultTextColor);
+					ModuleGridLayout.removeFilter(filterKey);
+				}
 			}
 		});
 	}

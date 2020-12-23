@@ -1,3 +1,5 @@
+//GUI page
+//Test type displays hard coded, multiple choice questions
 import java.util.ArrayList;
 import javax.swing.*;
 import java.awt.*;
@@ -26,16 +28,28 @@ public class TestLayout extends GUI_Page
      
      public void activate(){
          
-         pressedButton = PRESSED_BTN_DEFAULT; //set selected button to 'none pressed'
-         // Page Title
-		JLabel title = new JLabel(pageTitle);
-		title.setSize( GUI.TITLE_LABEL_WIDTH, GUI.TITLE_LABEL_HEIGHT );
-		title.setLocation( (GUI.SCREEN_WIDTH/2) - (GUI.TITLE_LABEL_WIDTH/2), GUI.BUFFER_SIZE );
-		title.setForeground( Color.white );
-		GUI.addComponent(title);
+		 pressedButton = PRESSED_BTN_DEFAULT; //set selected button to 'none pressed'
+
+		 // Page Title
+		 JPanel titlePanel = new JPanel();
+		 titlePanel.setBackground( Color.black );
+		 titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+		 titlePanel.setSize( GUI.TITLE_LABEL_WIDTH, GUI.TITLE_LABEL_HEIGHT*2 );
+		 titlePanel.setLocation( (GUI.SCREEN_WIDTH/2) - (GUI.TITLE_LABEL_WIDTH/2), GUI.BUFFER_SIZE );
+		 GUI.addComponent(titlePanel);
+		 
+		 JLabel title = new JLabel(Module.getActiveModule().topic, SwingConstants.CENTER);
+		 title.setForeground( Color.white );
+		 titlePanel.add(title);
+		 
+		 JLabel subTitle = new JLabel(Module.getActiveModule().subTopic, SwingConstants.CENTER);
+		 //subTitle.setSize( GUI.TITLE_LABEL_WIDTH, GUI.TITLE_LABEL_HEIGHT );
+		 //title.setLocation( (GUI.SCREEN_WIDTH/2) - (GUI.TITLE_LABEL_WIDTH/2), GUI.BUFFER_SIZE );
+		 subTitle.setForeground( Color.white );
+		 titlePanel.add(subTitle);
 		
 		//Home button
-		GUI.addComponent( new HomeButton() );
+		 GUI.addComponent( new HomeButton() );
                 
       currentAnswerKey = Resource_Manager.getAnswerKeys(pageKey);
 	  if(currentAnswerKey == null){
@@ -54,7 +68,7 @@ public class TestLayout extends GUI_Page
 		GUI.addComponent( pageText );
 
 		//Create place holder for image
-		JLabel pageImage = new JLabel(Resource_Manager.getImage(pageKey), SwingConstants.CENTER);
+		JLabel pageImage = new JLabel(Resource_Manager.loadResource(pageKey), SwingConstants.CENTER);
 		pageImage.setSize(GUI.IMAGE_FRAME_WIDTH, GUI.IMAGE_FRAME_HEIGHT);
 		pageImage.setLocation(textPanelStartX + GUI.TEXT_FRAME_WIDTH + GUI.BUFFER_SIZE_LG, GUI.TEST_BUTTON_HEIGHT + GUI.BUFFER_SIZE_LG);
 		GUI.addComponent( pageImage );
@@ -87,9 +101,9 @@ public class TestLayout extends GUI_Page
 		GUI.addComponent(navContainerPanel);
 
 		//Previous Page Button
-		JButton prev_button = new JButton( "Previous Page" );
-			prev_button.addActionListener( new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
+		ActionButton prev_button = new ActionButton( "Previous Page" );
+			prev_button.addMouseListener(new MouseAdapter(){
+				public void mouseClicked(MouseEvent e){
 					GUI_Manager.loadPage( Module.getPreviousPageKey() );
 				}
 			} );
@@ -100,15 +114,16 @@ public class TestLayout extends GUI_Page
 		
 		//Next Page Button
 		boolean isLastPage = Module.currentPage >= Module.getActiveModule().numPages;
-		JButton next_button = new JButton((isLastPage) ? "Finish" : "Next" );
-		next_button.addActionListener( new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
+		ActionButton next_button = new ActionButton((isLastPage) ? "Finish" : "Next" );
+		next_button.addMouseListener(new MouseAdapter(){
+				public void mouseClicked(MouseEvent e){
 						if(GUI.DEBUG)System.out.printf("adding answer for: %s : %d\n", pageKey, pressedButton);
 						TestHelper.addAnswer(pageKey, pressedButton);
 						
 						if(isLastPage){
-							TestHelper.gradeTest();
-							UserProfile.addScore( Module.getActiveModule().pageKey, TestHelper.currentScore );
+							TestHelper.getScore();
+							//UserProfile.addScore( Module.getActiveModule().pageKey, TestHelper.currentScore );
+							TestResultLayout.testType = TestType.MULTI;
 							GUI_Manager.loadPage( GUI.RESULTS_ID );
 						} 
 						else{
@@ -116,9 +131,6 @@ public class TestLayout extends GUI_Page
 						}
 				}
 		} );
-		//next_button.setSize( GUI.NAVBUTTON_WIDTH, GUI.NAVBUTTON_HEIGHT );
-		//next_button.setLocation( GUI.SCREEN_WIDTH - (GUI.NAVBUTTON_WIDTH + GUI.BUFFER_SIZE_LG) * 2 - offset, GUI.SCREEN_HEIGHT - (GUI.NAVBUTTON_HEIGHT*3 + GUI.BUFFER_SIZE)  );
-		//GUI.addComponent( next_button );
 		navContainerPanel.add( next_button );
 	}
 }

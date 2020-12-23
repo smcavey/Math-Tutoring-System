@@ -1,3 +1,7 @@
+//AccountHelper assits with LoginLayout and CreateUserLayout
+//AccountHelper stores user credentials and also is where new account credentials are sent to the database
+//LoginLayout checks userExists() and isValidPassword() for login
+//Error messages are also stored and processed
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -68,6 +72,13 @@ public class AccountHelper
         return userCredentials.containsKey(userName);
     }
     public static boolean isVaildPassword(String userName, String password){
-        return userCredentials.get(userName).equals( password );
+		if(userCredentials.containsKey(userName))
+		{
+			return userCredentials.get(userName).equals( password );
+		}
+		else
+		{
+			return false;
+		}
     }
 }

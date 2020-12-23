@@ -1,10 +1,12 @@
+//HomeButton is the class for which all gui pages with a home button get their home button from
+//HomeButton is initialized here and set up with sizing and action listener
 import java.awt.Color;
 import javax.swing.JLabel;
 import java.awt.event.*;
 
 public class HomeButton extends JLabel
 {
-	private int home_btn_size = 36;
+	public static int home_btn_size = 36;
 	private String image_path = "home_image.png";
 	
 	public HomeButton(){

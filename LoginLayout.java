@@ -1,3 +1,7 @@
+//LoginLayout is the first page of the applicationName
+//LoginLayout contains the text fields for username and password
+//Pressing the login button here takes you to HomePageLayout
+//The username and password text fields call AccountHelper for user credential validity
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -14,12 +18,14 @@ public class LoginLayout extends GUI_Page
 	private int titleHeight = 150;
 	private int titleWidth = 450;
 	
-	private int IMG_ICON_SIZE = 256;
+	private int IMG_ICON_SIZE = 186;
 	
-	private static String IMG_A = "login_img_a.png";
-	private static String IMG_B = "login_img_b.png";
-	private static String IMG_C = "login_img_c.png";
+	private static String IMG_A = "login_img_a";
+	private static String IMG_B = "login_img_b";
+	private static String IMG_C = "login_img_c";
 	private static JTextField [] textFields = new JTextField [2];
+	
+	private JLabel errorMsgLabel;
 
 	public void activate()
 	{
@@ -27,19 +33,19 @@ public class LoginLayout extends GUI_Page
 		//int graphicHeight = GUI.SCREEN_HEIGHT - (GUI.BUFFER_SIZE_LG * 3);		//area heigth for login images
 		
 		//Top Left
-		JLabel graphicA = new JLabel(Resource_Manager.loadImageLocal(IMG_A));
+		JLabel graphicA = new JLabel(Resource_Manager.loadResourceScaled(IMG_A, IMG_ICON_SIZE, IMG_ICON_SIZE));
 		graphicA.setSize( IMG_ICON_SIZE, IMG_ICON_SIZE );
-		graphicA.setLocation( GUI.BUFFER_SIZE_LG, GUI.BUFFER_SIZE_LG );
+		graphicA.setLocation( GUI.BUFFER_SIZE_LG, GUI.SCREEN_HEIGHT/4 - IMG_ICON_SIZE/2 );
 		GUI.addComponent( graphicA );
 		
 		//Top Right
-		JLabel graphicB = new JLabel(Resource_Manager.loadImageLocal(IMG_B));
+		JLabel graphicB = new JLabel(Resource_Manager.loadResourceScaled(IMG_B, IMG_ICON_SIZE, IMG_ICON_SIZE));
 		graphicB.setSize( IMG_ICON_SIZE, IMG_ICON_SIZE );
-		graphicB.setLocation( graphicWidth - IMG_ICON_SIZE, GUI.BUFFER_SIZE_LG );
+		graphicB.setLocation( graphicWidth - IMG_ICON_SIZE - GUI.BUFFER_SIZE_LG, GUI.SCREEN_HEIGHT/4 - IMG_ICON_SIZE/2 );
 		GUI.addComponent( graphicB );
 		
 		//Center Bottom
-		JLabel graphicC = new JLabel(Resource_Manager.loadImageLocal(IMG_C));
+		JLabel graphicC = new JLabel(Resource_Manager.loadResourceScaled(IMG_C, IMG_ICON_SIZE, IMG_ICON_SIZE));
 		graphicC.setSize( IMG_ICON_SIZE, IMG_ICON_SIZE );
 		graphicC.setLocation( (GUI.SCREEN_WIDTH/4) - IMG_ICON_SIZE/2, GUI.SCREEN_HEIGHT - (GUI.SCREEN_HEIGHT/4) - IMG_ICON_SIZE/2);
 		GUI.addComponent( graphicC );
@@ -69,12 +75,14 @@ public class LoginLayout extends GUI_Page
 		applicationName.setBackground( Color.black );
 		titleContainer.add( applicationName );
 		
+		//Mid graphic (line)
 		int mid_graphicStartX = graphicWidth + (GUI.BUFFER_SIZE_LG * 2);
 		int mid_graphicHeight = GUI.SCREEN_HEIGHT - (GUI.SCREEN_HEIGHT / 2);
 		JLabel mid_graphic = new JLabel();
-		mid_graphic.setSize( GUI.BUFFER_SIZE_LG, mid_graphicHeight );
+		mid_graphic.setSize( GUI.BUFFER_SIZE, mid_graphicHeight );
 		mid_graphic.setLocation( GUI.SCREEN_WIDTH/2, GUI.SCREEN_HEIGHT/2 - mid_graphicHeight/2 );
 		mid_graphic.setBackground( Color.white );
+		mid_graphic.setOpaque(true);
 		GUI.addComponent( mid_graphic );
 			
 		JPanel loginContainer = new JPanel();
@@ -84,7 +92,9 @@ public class LoginLayout extends GUI_Page
 		loginContainer.setLayout( gridLayout );
 		int loginContainerHeight = textFieldHeight*3 + GUI.BUFFER_SIZE_LG*2;
 		loginContainer.setSize( textFieldWidth, loginContainerHeight );
-		loginContainer.setLocation( GUI.SCREEN_WIDTH - GUI.SCREEN_WIDTH/4 - textFieldWidth/2, GUI.SCREEN_HEIGHT/2 - loginContainerHeight/2 );
+		int loginContainerXOffset = GUI.SCREEN_WIDTH - GUI.SCREEN_WIDTH/4 - textFieldWidth/2;
+		int loginContainerYOffset = GUI.SCREEN_HEIGHT/2 - loginContainerHeight/2;
+		loginContainer.setLocation( loginContainerXOffset, loginContainerYOffset );
 		loginContainer.setBackground( Color.black );
 		GUI.addComponent( loginContainer );
 		
@@ -107,6 +117,15 @@ public class LoginLayout extends GUI_Page
 			loginContainer.add( field );
 		}
 		
+		
+		
+		errorMsgLabel = new JLabel();
+		errorMsgLabel.setLocation( loginContainerXOffset + textFieldWidth + GUI.BUFFER_SIZE, loginContainerYOffset );
+		errorMsgLabel.setSize( textFieldWidth, textFieldHeight );
+		errorMsgLabel.setForeground(Color.white);
+		GUI.addComponent( errorMsgLabel );
+		
+		
 		JPanel accountButtonContainer = new JPanel();
 		gridLayout = new GridLayout(1,2);
 		gridLayout.setHgap( GUI.BUFFER_SIZE_LG );
@@ -115,78 +134,42 @@ public class LoginLayout extends GUI_Page
 		loginContainer.add( accountButtonContainer );
 		
 		
-		JLabel loginButton = new JLabel("LOGIN");
-		loginButton.setForeground( Color.white );
-		loginButton.setBorder( new LineBorder(Color.LIGHT_GRAY, 2) );
+		ActionButton loginButton = new ActionButton("LOGIN");
+		
+		loginButton.addIcon( "back_image" );
+		//loginButton.setForeground( Color.white );
+		//loginButton.setBorder( new LineBorder(Color.LIGHT_GRAY, 2) );
 		loginButton.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				//put in if block so if credential verification is completed then go to home_id
 				//if(AccountHelper.IsValidPassword(AccountHelper.userCredentials[0], AccountHelper.userCredentials[1])){
+					
 				if(AccountHelper.isVaildPassword(textFields[0].getText(), textFields[1].getText())){
 					GUI_Manager.loadPage( GUI.HOME_ID );
 				}
-			}
-			public void mouseEntered(MouseEvent evt) {
-				loginButton.setBorder( new LineBorder(Color.white, 2) );
-			}
-			public void mouseExited(MouseEvent evt) {
-				loginButton.setBorder( new LineBorder(Color.LIGHT_GRAY, 2) );
+				else
+				{
+					errorMsgLabel.setText("Invalid User Name/Password");
+				}
 			}
 		});
 		accountButtonContainer.add( loginButton );
 		
-		JLabel createUserButton = new JLabel("CREATE");
-		createUserButton.setForeground( Color.white );
-		createUserButton.setBorder( new LineBorder(Color.LIGHT_GRAY, 2) );
+		ActionButton createUserButton = new ActionButton("CREATE");
+		createUserButton.addIcon("create_image");
+		//createUserButton.setForeground( Color.white );
+		//createUserButton.setBorder( new LineBorder(Color.LIGHT_GRAY, 2) );
 		createUserButton.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				GUI_Manager.loadPage( GUI.CREATE_ID );
 			}
-			public void mouseEntered(MouseEvent evt) {
+/* 			public void mouseEntered(MouseEvent evt) {
 				createUserButton.setBorder( new LineBorder(Color.white, 2) );
 			}
 			public void mouseExited(MouseEvent evt) {
 				createUserButton.setBorder( new LineBorder(Color.LIGHT_GRAY, 2) );
-			}
+			} */
 		});
 		accountButtonContainer.add( createUserButton );
-			//field.setLocation( btn_groupStartX, offset );
-		//field.setBorder( new LineBorder(Color.LIGHT_GRAY, 2) );
-		/*String[] fieldNames = { "User Name", "Password" };
-		int btn_groupStartY = GUI.SCREEN_HEIGHT / 3;
-		int btn_groupStartX = GUI.SCREEN_WIDTH - mid_graphicStartX + ((mid_graphicStartX/2) - (textFieldWidth/2));
-		int btn_groupOffsetY = btn_groupStartY;
-		for(int i = 0; i < 2; i++){
-			JTextField field = new JTextField(fieldNames[i]);
-			field.setSize( textFieldWidth, textFieldHeight );
-			int offset = btn_groupStartY + (textFieldHeight + GUI.BUFFER_SIZE_LG) * i;
-			field.addMouseListener(new MouseAdapter(){
-				@Override
-				public void mouseClicked(MouseEvent e){
-					field.setText("");
-				}
-			});
-			field.setLocation( btn_groupStartX, offset );
-			field.setBorder( new LineBorder(Color.LIGHT_GRAY, 2) );
-			GUI.addComponent( field );
-			btn_groupOffsetY += textFieldHeight + GUI.BUFFER_SIZE_LG;
-		}
-		
-		
-		
-		String[] btnNames = { "Login", "Create" };
-		for(int i = 0; i < 2; i++){
-			JButton btn = new JButton(btnNames[i]);
-			btn.setSize( btnWidth, btnHeight );
-			btn.setLocation( btn_groupStartX + (GUI.BUFFER_SIZE_LG + btnWidth) * i, btn_groupOffsetY);
-			btn.addActionListener( new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					GUI_Manager.loadPage(GUI.HOME_ID);
-				}
-			} );
-			GUI.addComponent( btn );
-		}*/
-				//Mid screen dividing line
-
 	}
 }

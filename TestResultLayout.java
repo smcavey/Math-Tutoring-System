@@ -1,9 +1,15 @@
+//Displays results from various test types
+//calculates scores and disiplays correct answers
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Map.Entry;
 import java.awt.GridLayout;
 import javax.swing.border.LineBorder;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 
 public class TestResultLayout extends GUI_Page
 {
@@ -17,18 +23,40 @@ public class TestResultLayout extends GUI_Page
 	private static int RES_LABEL_WIDTH = 300;
 	private static int RES_LABEL_HEIGHT = 100;
 	
+	private int printButtonWidth = 100;
+	
 	private int defaultTextSize = 22;
+	private int scoreTextSize = 36;
+	
+	public static TestType testType;
+	private String pipImagePath = "pip_image.png";
 	
 	public void activate()
 	{
 		GUI.addComponent( new HomeButton() );
 		
-		/*JLabel title = new JLabel();
-		title.setSize( GUI.TITLE_LABEL_WIDTH, GUI.TITLE_LABEL_HEIGHT );
-		title.setLocation( (GUI.SCREEN_WIDTH/2), GUI.BUFFER_SIZE );
-		title.setForeground( Color.white );
-		GUI.addComponent(title);*/
-		
+		ActionButton printbtn = new ActionButton("Print");
+		//TODO: printbtn.addIcon("add print image path");
+		printbtn.setLocation( GUI.SCREEN_WIDTH - (printButtonWidth + HomeButton.home_btn_size + GUI.BUFFER_SIZE_LG*3), GUI.BUFFER_SIZE );
+		printbtn.setSize(printButtonWidth, HomeButton.home_btn_size);
+		printbtn.addMouseListener( new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				try 
+				{
+					Robot robot = new Robot();
+					String format = ".png";
+					String fileName = "tuwe_sc" + new java.util.Date() + format;
+					Rectangle screenRect = GUI.root.getBounds();//new Rectangle(5,5,GUI.SCREEN_WIDTH-5, GUI.SCREEN_HEIGHT-5);
+					BufferedImage screenFullImage = robot.createScreenCapture(screenRect);
+					ImageIO.write(screenFullImage, format, new File(fileName));
+					System.out.println("Screenshot captured");
+					new Thread(new PrintActionListener(screenFullImage)).start();
+				} catch (AWTException | IOException ex) {
+					System.err.println(ex);
+				}
+			}
+		} );
+		GUI.addComponent(printbtn);
 		
 		JPanel mainContainer = new JPanel();
 		mainContainer.setLocation( GUI.BUFFER_SIZE_LG, GUI.BUFFER_SIZE_LG*2 );
@@ -40,6 +68,8 @@ public class TestResultLayout extends GUI_Page
 		mainContainer.setLayout( mainLayout );
 		GUI.addComponent( mainContainer );
 		
+		
+		//******************** Score Panel - Start - ****************************************//
 		JPanel scoreContainer = new JPanel();
 		scoreContainer.setLayout( new BoxLayout(scoreContainer, BoxLayout.Y_AXIS ));
 		scoreContainer.setBorder( new LineBorder(Color.LIGHT_GRAY, 2) );
@@ -77,16 +107,49 @@ public class TestResultLayout extends GUI_Page
 		scoreText.setAlignmentX( Component.CENTER_ALIGNMENT );
 		scoreContainer.add( scoreText );
 		
-		JLabel scoreValue = makeLabel( String.valueOf(TestHelper.currentScore), "Calibri", 38);
+		int score = 0;
+		if(testType == TestType.MULTI)
+		{
+			score = TestHelper.currentScore;
+		}
+		else if(testType == TestType.RNG)
+		{
+			score = TestMathLayout.getScore();
+		}
+		else //if(testType == TestType.RNG_SHAPE)
+		{
+			score = TestCountLayout.getScore();
+		}
+		JLabel scoreValue = makeLabel( String.valueOf(score), "Calibri", 38);
+		//Add Score to user ProfileAddr
+		UserProfile.addScore( Module.getActiveModule().pageKey, score);
+		
 		scoreValue.setAlignmentX( Component.CENTER_ALIGNMENT );
 		scoreContainer.add( scoreValue );
 
 		mainContainer.add( scoreContainer );
 		
+		
+		//******************** Score Panel - End - ****************************************//
+		
 		//Question Container
 		JPanel questionContainer = new JPanel();
 		questionContainer.setBackground(Color.black);
-		GridLayout gridLayout = new GridLayout(TestHelper.testAnswers.size(),1);
+		
+		GridLayout gridLayout;
+		if(testType == TestType.MULTI)
+		{
+			gridLayout = new GridLayout(TestHelper.testAnswers.size(),1);
+		}
+		else if(testType == TestType.RNG)
+		{
+			gridLayout = new GridLayout(TestMathLayout.currentTest.size(),1);
+		}
+		else //testType == RNG_SHAPE
+		{
+			gridLayout = new GridLayout(TestCountLayout.currentTest.size(),1);
+		}
+		
 		gridLayout.setHgap( GUI.BUFFER_SIZE_LG );
 		questionContainer.setLayout(gridLayout);
 		mainContainer.add( questionContainer );
@@ -103,34 +166,85 @@ public class TestResultLayout extends GUI_Page
 		userAnswerContainer.setLayout( gridLayout );
 		mainContainer.add( userAnswerContainer );		
 		
-		int i = 0;
-		
-		for (String key : TestHelper.testAnswers)
+		if( testType == TestType.MULTI )
 		{
-			questionContainer.add( makeTextArea("Quesiton: " + String.valueOf(i+1) ));
+			int i = 0;
 			
-			AnswerKey ak = Resource_Manager.getAnswerKeys(key); 	//Get answers for question
-			int userAnser = TestHelper.currentTestAnswers.get(key);	//Get user entered answer for question
+			for (String key : TestHelper.testAnswers)
+			{
+				questionContainer.add( makeTextArea("Quesiton: " + String.valueOf(i+1) ));
+				
+				AnswerKey ak = Resource_Manager.getAnswerKeys(key); 	//Get answers for question
+				int userAnser = TestHelper.currentTestAnswers.get(key);	//Get user entered answer for question
 
-			if(userAnser < 0)
-			{
-				answerContainer.add( makeTextArea("Not Answered") );
-			}
-			else
-			{
-				if(ak.correctAnswerIndex != userAnser)
+				if(userAnser < 0)
 				{
-					JPanel correctAnswerPanel = makeTextArea( "Correct Answer: " + ak.answers[ak.correctAnswerIndex] );
-					correctAnswerPanel.setBorder( new LineBorder(Color.green, 2) );
-					answerContainer.add( correctAnswerPanel );
-					userAnswerContainer.add( makeTextArea( "Your Answer: " + ak.answers[userAnser] ));
+					answerContainer.add( makeTextArea("Not Answered") );
 				}
 				else
 				{
-					answerContainer.add( makeTextArea( "Correct!" ));
+					if(ak.correctAnswerIndex != userAnser)
+					{
+						JPanel correctAnswerPanel = makeTextArea( "Correct Answer: " + ak.answers[ak.correctAnswerIndex] );
+						correctAnswerPanel.setBorder( new LineBorder(Color.green, 2) );
+						answerContainer.add( correctAnswerPanel );
+						userAnswerContainer.add( makeTextArea( "Your Answer: " + ak.answers[userAnser] ));
+					}
+					else
+					{
+						answerContainer.add( makeTextArea( "Correct!" ));
+					}
+				}
+				i++;
+			}
+		}
+		else if( testType == TestType.RNG)
+		{
+			//System.out.printf("Implement This  %d", TestMathLayout.currentTest.size());
+			
+			int i = 0;
+			for(AnswerKey ak : TestMathLayout.currentTest)
+			{
+				questionContainer.add( makeTextArea(String.valueOf(++i) + ". " + ak.question ));
+				answerContainer.add( makeTextArea(" = " + ak.correctAnswer ));
+				
+				if(ak.userAnswer < 0)
+				{
+					userAnswerContainer.add( makeTextArea("Not Answered") );
+				}
+				else if( ak.userAnswer == ak.correctAnswer )
+				{
+					userAnswerContainer.add( makeTextArea( "Correct!" ));
+				}
+				else
+				{
+					JPanel textPanel = makeTextArea( "X  - " + ak.correctAnswer );
+					textPanel.setBorder( new LineBorder(Color.red, 2) );
+					userAnswerContainer.add( textPanel );
 				}
 			}
-			i++;
+		}
+		else if(testType == TestType.RNG_SHAPE)
+		{
+			for(AnswerKey ak : TestCountLayout.currentTest)
+			{
+				questionContainer.add(makeShapeContainer(ak.correctAnswer));
+				
+				if(ak.userAnswer < 0)
+				{
+					userAnswerContainer.add( makeTextArea("Not Answered") );
+				}
+				else if( ak.userAnswer == ak.correctAnswer )
+				{
+					userAnswerContainer.add( makeTextArea( "Correct!" ));
+				}
+				else
+				{
+					JPanel textPanel = makeTextArea( "X  - " + ak.correctAnswer );
+					textPanel.setBorder( new LineBorder(Color.red, 2) );
+					userAnswerContainer.add( textPanel );
+				}
+			}
 		}
 	}
 	
@@ -155,4 +269,16 @@ public class TestResultLayout extends GUI_Page
 		label.setFont( new Font(fontName, Font.BOLD, fontSize));
 		return label;
 	}
+	
+	private JPanel makeShapeContainer(int amt){
+		JPanel container = new JPanel();
+		container.setBackground( Color.black );
+		container.setLayout(new BoxLayout(container, BoxLayout.X_AXIS));
+		for(int i = 0; i < amt; i++){
+			container.add(new JLabel(Resource_Manager.getScaledImageFromPath(pipImagePath, 32, 32)));
+		}
+		return container;
+	}
 }
+
+enum TestType { MULTI, RNG, RNG_SHAPE }

@@ -1,10 +1,14 @@
+//GUI contains the Main method
+//GUI contains all public global variables related to sizing
+//GUI also has the page IDs for all pages
+//GUI activates all GUI pages
 import javax.swing.*;
 import java.awt.FlowLayout;
 import java.awt.Color;
 
 public class GUI
 {
-	private static JFrame root;
+	public static JFrame root;
 	
 	public static int SCREEN_WIDTH = 1280;
 	public static int SCREEN_HEIGHT = 720;
@@ -45,6 +49,11 @@ public class GUI
 	public static String GRADE_3 = "3";
 	public static String GRADE_4 = "4";
 	
+	public static String geometry = "Geometry";
+	public static String algebra = "Algebra";
+	public static String counting = "Counting";
+	public static String angles = "Angles";
+	
 	public static boolean DEBUG;
 	
 	public static void main(String[] args)
@@ -56,19 +65,14 @@ public class GUI
 		Resource_Manager.Init();
 		AccountHelper.init();
 		RewardLayout.init();
-		GUI_Manager.loadPage(LOGIN_ID); // starting page
-		
 		//root.getRootPane().setBorder(BorderFactory.createMatteBorder(4, 4, 4, 4, Color.RED));
-		//Populate User Profile with scores
-		UserProfile.scores.put("a4t", 80);
-		UserProfile.scores.put("a2t", 90);
-		UserProfile.scores.put("n4t", 75);
-		UserProfile.scores.put("n3t", 89);
-		UserProfile.scores.put("c4t", 78);
-		UserProfile.scores.put("c3t", 94);
-		UserProfile.scores.put("g3t", 56);
-		UserProfile.scores.put("g4t", 76);
+		
+		//Set for presentation examples - 
+		Resource_Manager.populateUserProfileWithTestValues();
+		
+		GUI_Manager.loadPage(LOGIN_ID); // starting page
 	}
+
 	
 	static void CreateMainWindow()
 	{
